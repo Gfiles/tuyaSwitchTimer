@@ -7,7 +7,7 @@ import sys
 import time
 import datetime
 
-hasTuya = True
+hasTuya = False
 
 def readConfig():
     settingsFile = os.path.join(cwd, "appconfig.json")
@@ -74,6 +74,7 @@ timeOn = config["timeOn"]*60
 timeOff = config["timeOff"]*60
 startTime = config["startTime"]
 stopTime = config["stopTime"]
+dayWeekOn = config["dayWeekOn"]
 
 # Get Time Objets
 currentDateAndTime = datetime.datetime.now()
@@ -150,6 +151,7 @@ while True:
             lasttimePassed = 0
     # Get Time Objets
     currentDateAndTime = datetime.datetime.now()
+    dayOfWeek = currentDateAndTime.weekday()
     switchInTime = onTime < currentDateAndTime < offTime
     
     #print(f"{onTime.strftime("%H:%M:%S")} < {currentDateAndTime.strftime("%H:%M:%S")} < {offTime.strftime("%H:%M:%S")}")
@@ -162,7 +164,7 @@ while True:
     else:
         switchState = lastSwitchState
     #print(switchInTime)
-    if switchInTime:
+    if switchInTime and dayWeekOn[dayOfWeek]:
         #print(f"Switch state: {switchState}")
         if switchMode:
             #print("Runnning")
@@ -228,4 +230,3 @@ while True:
 
 			# quit the program.
             quit()
-    textDraw()
