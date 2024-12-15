@@ -7,7 +7,7 @@ import sys
 import time
 import datetime
 
-hasTuya = False
+hasTuya = True
 
 def readConfig():
     settingsFile = os.path.join(cwd, "appconfig.json")
@@ -143,6 +143,18 @@ while True:
             except:
                 deviceOnLine = False
                 textDraw("Device Offline", red)
+            for event in pygame.event.get():
+
+                # if event object type is QUIT
+                # then quitting the pygame
+                # and program both.
+                if event.type == pygame.QUIT:
+
+                    # deactivates the pygame library
+                    pygame.quit()
+
+                    # quit the program.
+                    quit()
     else:
         if not deviceOnLine:
             deviceOnLine = True
