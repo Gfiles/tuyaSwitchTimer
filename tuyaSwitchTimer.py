@@ -24,7 +24,8 @@ def readConfig():
                 "timeOn" : 1.5,
                 "timeOff" : 7,
                 "startTime" : "10:15",
-                "stopTime" : "21:30"
+                "stopTime" : "21:30",
+                "dayWeekOn" : [0, 1, 1, 1, 1, 1, 1]
         }
         # Serializing json
         json_object = json.dumps(data, indent=4)
@@ -116,26 +117,31 @@ font = pygame.font.Font('freesansbold.ttf', 64)
 textDraw("Conecting", green)
 # infinite loop
 deviceOnLine = False
+lastSwitchState = False
+timerOffTime = time.time()
+timerDeviceOffline = 0
 while True:
     if hasTuya:
         while not deviceOnLine:
             try:
-                switch = tinytuya.OutletDevice(dev_id=devices[0][1], address=devices[0][2],local_key=devices[0][3],version=3.3)
-                
-                #switchState = switch.status()['dps']['1']
-                #print(f"Switch state: {switchState}")
+                if time.time() - timerDeviceOffline > 60:
+                    timerDeviceOffline = time.time()
+                    print("Testing Conection")
+                    switch = tinytuya.OutletDevice(dev_id=devices[0][1], address=devices[0][2],local_key=devices[0][3],version=3.3)
+                    
+                    #switchState = switch.status()['dps']['1']
+                    #print(f"Switch state: {switchState}")
 
-                switch.turn_on()
+                    switch.turn_on()
 
-                timerOn = time.time()
-                #timerOff = 0
-                switchMode = True
-                lasttimePassed = 0
-                deviceOnLine = True
+                    timerOn = time.time()
+                    #timerOff = 0
+                    switchMode = True
+                    lasttimePassed = 0
+                    deviceOnLine = True
             except:
                 deviceOnLine = False
                 textDraw("Device Offline", red)
-                time.sleep(600)
     else:
         if not deviceOnLine:
             deviceOnLine = True
@@ -148,9 +154,13 @@ while True:
     
     #print(f"{onTime.strftime("%H:%M:%S")} < {currentDateAndTime.strftime("%H:%M:%S")} < {offTime.strftime("%H:%M:%S")}")
     if hasTuya:
-        switchState = switch.status()['dps']['1']
+        try:
+            switchState = switch.status()['dps']['1']
+            lastSwitchState = switchState
+        except:
+            switchState = lastSwitchState
     else:
-        switchState = True
+        switchState = lastSwitchState
     #print(switchInTime)
     if switchInTime:
         #print(f"Switch state: {switchState}")
@@ -166,10 +176,9 @@ while True:
                     lasttimePassed = timePassed
                 if switchState == False:
                     print("Switch On")
+                    lastSwitchState = True
                     if hasTuya:
                         switch.turn_on()
-                    else:
-                        switchState = True
                     switchMode = True
             else:
                 switchMode = False
@@ -183,24 +192,23 @@ while True:
                     lasttimePassed = timePassed
                 if switchState:
                     print("Switch Off")
+                    lastSwitchState = False
                     if hasTuya:
                         switch.turn_off()
-                    else:
-                        switchState = False
                     switchMode = False
             else:
                 switchMode = True
                 timerOn = time.time()
-        time.sleep(1)
     else:
-        if switchState:
-            print("Switch Off")
-            if hasTuya:
-                switch.turn_off()
-            else:
-                switchState = False
-            textDraw(f"Off Time", red)
-        time.sleep(60)
+        textDraw(f"Off Time", red)
+        if (time.time() - timerOffTime > 60):
+            timerOffTime = time.time()
+            if switchState:
+                print("Switch Off")
+                lastSwitchState = False
+                if hasTuya:
+                    switch.turn_off()
+                
 	
 	# copying the text surface object
 	# to the display surface object
@@ -220,3 +228,4 @@ while True:
 
 			# quit the program.
             quit()
+    textDraw()
